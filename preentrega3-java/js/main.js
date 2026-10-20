@@ -42,63 +42,90 @@ let listaDePlanes = [planBasico, planIntermedio, planPremium, planFamiliar];
 const planVip = new Plan(5, "vip", 5000, true);
 listaDePlanes.push(planVip);
 
-const planPrueba = new Plan(0, "prueba gratis", 0, false);
-listaDePlanes.unshift(planPrueba);
-
-let planEliminado = listaDePlanes.pop();
-console.log("Se ha eliminado el plan del final: " + planEliminado.nombre);
-
-function listarPlanesConsola(lista) {
-    console.log("--- Catalogo de Planes Disponibles ---");
-    for (const unPlan of lista) {
-        console.log("ID: " + unPlan.id + " | Plan: " + unPlan.nombre + " | Precio Base: $" + unPlan.precioBase);
-    }
-    console.log("Total de planes en catalogo: " + lista.length);
+function filtrarPorPresupuesto(lista, precioMax) {
+    return lista.filter(plan => plan.precioBase <= precioMax && plan.disponible);
 }
 
-alert("Bienvenido al sistema de gestion y cotizacion de planes.");
-
-let planBuscadoNombre = prompt("¿Qué plan querés buscar en el catálogo? (Ej: basico, intermedio, premium, familiar)").toLowerCase();
-
-let planEncontrado = listaDePlanes.find(p => p.nombre === planBuscadoNombre);
-
-if (planEncontrado) {
-    let posicion = listaDePlanes.indexOf(planEncontrado);
-    alert("¡Encontrado! El plan '" + planEncontrado.nombre + "' esta disponible en la posicion " + posicion + " con un precio base de $" + planEncontrado.precioBase + ".");
-    console.log("Busqueda exitosa: " + planEncontrado.nombre + " (Indice: " + posicion + ")");
-} else {
-    alert("El plan '" + planBuscadoNombre + "' no figura en el catalogo actual.");
-    console.log("Busqueda fallida: " + planBuscadoNombre);
+function obtenerCatalogoFormateado(lista) {
+    return lista.map(plan => "• " + plan.nombre.toUpperCase() + " -> $" + plan.precioBase + "/mes");
 }
 
-listaDePlanes.splice(2, 1, new Plan(3, "premium gold", 4500, true));
-console.log("Se actualizo el elemento del indice 2 usando splice.");
+function calcularSumaTotalCatalogo(lista) {
+    return lista.reduce((acumulado, plan) => acumulado + plan.precioBase, 0);
+}
 
-listarPlanesConsola(listaDePlanes);
+alert("Bienvenido al sistema interactivo de gestion y cotizacion de planes.");
 
 let activo = true;
 
 while (activo) {
-    let entrada = prompt("¿Qué plan querés cotizar? (Escribi el nombre del plan o 'fin' para salir)").toLowerCase();
+    let opcion = prompt(
+        "Selecciona una opcion del menu:\n" +
+        "1. Cotizar un plan especifico\n" +
+        "2. Filtrar planes por presupuesto maximo\n" +
+        "3. Ver catalogo formateado\n" +
+        "4. Ver costo total del catalogo completo\n" +
+        "5. Salir"
+    );
 
-    if (entrada === "fin") {
-        alert("Saliendo del simulador. ¡Hasta luego!");
-        activo = false;
-    } else {
-        let planSeleccionado = listaDePlanes.find(p => p.nombre === entrada);
+    switch (opcion) {
+        case "1":
+            let nombreBuscado = prompt("Escribi el nombre del plan que queres cotizar (ej: basico, intermedio, premium, familiar, vip):").toLowerCase();
+            
+            let planEncontrado = listaDePlanes.find(p => p.nombre === nombreBuscado);
 
-        if (planSeleccionado) {
-            let meses = parseInt(prompt("¿Cuántos meses lo vas a contratar?"));
-
-            if (isNaN(meses) || meses <= 0) {
-                alert("Error: tenes que poner un número válido de meses.");
+            if (planEncontrado) {
+                let meses = parseInt(prompt("¿Por cuantos meses queres cotizar " + planEncontrado.nombre.toUpperCase() + "?"));
+                if (isNaN(meses) || meses <= 0) {
+                    alert("Por favor ingresa una cantidad de meses valida.");
+                } else {
+                    let resumen = planEncontrado.obtenerResumen(meses);
+                    alert(resumen);
+                    console.log("Cotizacion generada exitosamente:", planEncontrado);
+                }
             } else {
-                let resumen = planSeleccionado.obtenerResumen(meses);
-                alert(resumen);
-                console.log("Cotizacion realizada con exito para el plan: " + planSeleccionado.nombre);
+                alert("No encontramos ningun plan llamado '" + nombreBuscado + "'.");
             }
-        } else {
-            alert("Ese plan no esta disponible en el sistema. Proba de nuevo.");
-        }
+            break;
+
+        case "2":
+            let presupuesto = parseFloat(prompt("Ingresa tu presupuesto maximo mensual ($):"));
+            if (isNaN(presupuesto) || presupuesto <= 0) {
+                alert("Ingresa un monto valido.");
+            } else {
+                let filtrados = filtrarPorPresupuesto(listaDePlanes, presupuesto);
+                if (filtrados.length > 0) {
+                    let mensaje = "Planes encontrados dentro de tu presupuesto ($" + presupuesto + "):\n";
+                    filtrados.forEach(p => mensaje += "- " + p.nombre.toUpperCase() + " ($" + p.precioBase + ")\n");
+                    alert(mensaje);
+                    console.log("Planes filtrados por presupuesto:", filtrados);
+                } else {
+                    alert("No hay planes disponibles por $" + presupuesto + " o menos.");
+                }
+            }
+            break;
+
+        case "3":
+            let listaFormateada = obtenerCatalogoFormateado(listaDePlanes);
+            alert("Catalogo Actual de Planes:\n\n" + listaFormateada.join("\n"));
+            console.log("Nombres de planes transformados:", listaFormateada);
+            break;
+
+        case "4":
+            let totalCatalogo = calcularSumaTotalCatalogo(listaDePlanes);
+            alert("La suma total de contratar todos los planes del catalogo por un mes es: $" + totalCatalogo);
+            console.log("Suma total del catalogo calculada: $" + totalCatalogo);
+            break;
+
+        case "5":
+        case "fin":
+        case null:
+            alert("Gracias por utilizar el simulador. ¡Hasta luego!");
+            activo = false;
+            break;
+
+        default:
+            alert("Opcion no valida. Por favor ingresa un numero del 1 al 5.");
+            break;
     }
 }
