@@ -1,101 +1,78 @@
-let planesDisponibles = ["básico", "intermedio", "premium", "familiar", "corporativo"];
+class Plan {
+    constructor(id, nombre, precioBase, disponible) {
+        this.id = id;
+        this.nombre = nombre;
+        this.precioBase = precioBase;
+        this.disponible = disponible;
+    }
 
-function manipularExtremos(lista) {
-    lista.push("vip");
-    lista.unshift("prueba gratis");
-    let eliminado = lista.pop();
-    console.log("Se eliminó el elemento del final: " + eliminado);
-}
-
-function buscarPlanCatalogo(lista) {
-    let buscado = prompt("¿Qué plan querés buscar en el catálogo?").toLowerCase();
-    if (lista.includes(buscado)) {
-        let pos = lista.indexOf(buscado);
-        alert("¡Encontrado! El plan '" + buscado + "' está en la posición " + pos + ".");
-        console.log("Búsqueda exitosa: " + buscado + " (Índice: " + pos + ")");
-    } else {
-        alert("El plan '" + buscado + "' no figura en el catálogo.");
-        console.log("Búsqueda fallida: " + buscado);
+    calcularPrecioFinal(meses) {
+        let subtotal = this.precioBase * meses;
+        let descuento = meses >= 6 ? subtotal * 0.15 : 0;
+        return subtotal - descuento;
     }
 }
 
-function actualizarPlanConSplice(lista) {
-    lista.splice(2, 1, "premium gold");
-    console.log("Se actualizó el elemento del índice 2 usando splice.");
-    alert("Se actualizó el catálogo en el índice 2.");
-}
-
-function listarPlanesConForOf(lista) {
-    console.log("--- Listado actual de planes ---");
-    for (const plan of lista) {
-        console.log("Plan: " + plan);
-    }
-    alert("Listado mostrado en la consola (F12). Total de planes: " + lista.length);
-}
-
-function calcularPrecio(tipoPlan, meses) {
-    let costo = (tipoPlan === "intermedio") ? 2400 : (tipoPlan === "premium" || tipoPlan === "vip" || tipoPlan === "premium gold") ? 4000 : 1200;
-    return costo * meses;
-}
-
-function obtenerDescuento(monto, meses) {
-    return (meses >= 6) ? monto * 0.15 : 0;
-}
-
-function cotizarPlanSeleccionado(lista) {
-    let plan = prompt("¿Qué plan querés cotizar? Escribí uno de la lista:").toLowerCase();
-    if (lista.includes(plan)) {
-        let meses = parseInt(prompt("¿Cuántos meses lo vas a contratar?"));
-        if (isNaN(meses) || meses <= 0) {
-            alert("Número de meses no válido.");
-        } else {
-            let subtotal = calcularPrecio(plan, meses);
-            let descuento = obtenerDescuento(subtotal, meses);
-            let total = subtotal - descuento;
-            alert("Resumen:\nPlan: " + plan + "\nMeses: " + meses + "\nSubtotal: $" + subtotal + "\nDescuento: $" + descuento + "\nTotal: $" + total);
-        }
-    } else {
-        alert("Ese plan no está disponible.");
-    }
-}
-
-manipularExtremos(planesDisponibles);
-buscarPlanCatalogo(planesDisponibles);
-actualizarPlanConSplice(planesDisponibles);
-listarPlanesConForOf(planesDisponibles);
+const listaDePlanes = [
+    new Plan(1, "básico", 1200, true),
+    new Plan(2, "intermedio", 2400, true),
+    new Plan(3, "premium", 4000, true),
+    new Plan(4, "familiar", 3500, false),
+    new Plan(5, "corporativo", 6000, true)
+];
 
 let activo = true;
-alert("Bienvenido al simulador interactivo.");
+alert("Bienvenido al simulador de suscripciones con Funciones de Orden Superior.");
 
 while (activo) {
     let opcion = prompt(
         "Seleccioná una opción:\n" +
-        "1. Buscar un plan\n" +
-        "2. Ver catálogo completo\n" +
-        "3. Cotizar un plan\n" +
-        "4. Salir"
+        "1. Buscar un plan (find)\n" +
+        "2. Filtrar planes disponibles (filter)\n" +
+        "3. Calcular valor total del catálogo (reduce)\n" +
+        "4. Ver catálogo transformado (map)\n" +
+        "5. Salir"
     );
 
     switch (opcion) {
         case "1":
-            buscarPlanCatalogo(planesDisponibles);
+            let nombreBuscado = prompt("Escribí el nombre del plan a buscar (básico, intermedio, premium, familiar, corporativo):").toLowerCase();
+            let planEncontrado = listaDePlanes.find(plan => plan.nombre === nombreBuscado);
+            if (planEncontrado) {
+                alert("Plan encontrado: " + planEncontrado.nombre.toUpperCase() + " - Precio base: $" + planEncontrado.precioBase);
+                console.log("Plan encontrado:", planEncontrado);
+            } else {
+                alert("No se encontró ningún plan con ese nombre.");
+            }
             break;
+
         case "2":
-            listarPlanesConForOf(planesDisponibles);
+            let planesDisponibles = listaDePlanes.filter(plan => plan.disponible === true);
+            let nombresDisponibles = planesDisponibles.map(plan => plan.nombre).join(", ");
+            alert("Planes actualmente disponibles:\n" + nombresDisponibles);
+            console.log("Planes filtrados (disponibles):", planesDisponibles);
             break;
+
         case "3":
-            cotizarPlanSeleccionado(planesDisponibles);
+            let totalCatalogo = listaDePlanes.reduce((acc, plan) => acc + plan.precioBase, 0);
+            alert("El valor acumulado de los precios base es: $" + totalCatalogo);
+            console.log("Total catálogo (reduce): $" + totalCatalogo);
             break;
+
         case "4":
+            let resumenMayus = listaDePlanes.map(plan => plan.nombre.toUpperCase() + " ($" + plan.precioBase + ")");
+            alert("Catálogo transformado:\n" + resumenMayus.join("\n"));
+            console.log("Catálogo transformado (map):", resumenMayus);
+            break;
+
+        case "5":
         case null:
             alert("¡Hasta luego!");
             activo = false;
             break;
+
         default:
             alert("Opción no válida.");
-            break;
-    }
-}
             break;
     }
 }
